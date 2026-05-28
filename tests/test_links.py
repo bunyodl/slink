@@ -132,4 +132,4 @@ def test_list_links(client: TestClient) -> None:
 def test_shorten_invalid_url_returns_422(client: TestClient) -> None:
     response = client.post("/api/shorten", json={"url": "not-a-url"})
 
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_CONTENT
