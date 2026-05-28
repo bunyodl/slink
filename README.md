@@ -55,6 +55,8 @@ curl -I http://127.0.0.1:8000/abc123
 
 Submitting the same URL again (after canonicalization — scheme/host casing and trailing slashes) returns **200** with the existing code and the reuse message. A new URL returns **201**.
 
+Full decision flow (dedup, custom codes, collisions): [docs/post-shorten-flow.md](docs/post-shorten-flow.md).
+
 ## Storage
 
 Saved links live in `data/links.json`. Each entry includes `code`, `url`, `url_hash` (SHA-256 of the canonical URL for deduplication), and `created_at`. The file is created on first save and is not committed (see `.gitignore`).
