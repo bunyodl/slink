@@ -28,7 +28,7 @@ Starts the API with reload at http://127.0.0.1:8000 (see `BASE_URL` in `.env`).
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/health` | Health check |
-| POST | `/api/shorten` | Create short link |
+| POST | `/api/shorten` | Create or reuse short link (**201** new, **200** existing URL) |
 | GET | `/api/links/{code}` | Link metadata |
 | GET | `/api/links` | List all links |
 | GET | `/{code}` | **308** permanent redirect to original URL |
@@ -44,9 +44,20 @@ curl http://127.0.0.1:8000/api/links/abc123
 curl -I http://127.0.0.1:8000/abc123
 ```
 
+### POST `/api/shorten` response
+
+| Field | Description |
+|-------|-------------|
+| `code` | Short code |
+| `short_url` | Full short URL (`BASE_URL` + code) |
+| `original_url` | Stored destination URL |
+| `message` | `"Link created successfully"` (**201**) or `"Short link already exists for this URL"` (**200**) |
+
+Submitting the same URL again (after canonicalization — scheme/host casing and trailing slashes) returns **200** with the existing code and the reuse message. A new URL returns **201**.
+
 ## Storage
 
-Saved links live in `data/links.json`. The file is created on first save and is not committed (see `.gitignore`).
+Saved links live in `data/links.json`. Each entry includes `code`, `url`, `url_hash` (SHA-256 of the canonical URL for deduplication), and `created_at`. The file is created on first save and is not committed (see `.gitignore`).
 
 ## Tests
 

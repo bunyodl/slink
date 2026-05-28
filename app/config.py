@@ -6,6 +6,7 @@ class Settings(BaseSettings):
 
     base_url: str
     short_code_length: int = 6
+    max_code_generation_attempts: int = 20
 
 
 settings = Settings()

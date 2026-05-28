@@ -1,13 +1,18 @@
 from datetime import UTC, datetime
 
-from fastapi.testclient import TestClient
+import pytest
 from fastapi import status
+from fastapi.testclient import TestClient
 
+from app.data_store import StorageError
 from app.dependencies import get_link_repository
+from app.constants import MSG_LINK_CREATED, MSG_LINK_EXISTS
 from app.schemas.link import StoredLink
+from app.services.url_normalize import url_hash
 
 
 TEST_URL = "https://example.com/"
+
 
 def seed_link() -> str:
     code = "abc123"
@@ -15,6 +20,7 @@ def seed_link() -> str:
         StoredLink(
             code=code,
             url=TEST_URL,
+            url_hash=url_hash(TEST_URL),
             created_at=datetime.now(UTC),
         )
     )
@@ -32,6 +38,42 @@ def test_shorten_valid_url(client: TestClient) -> None:
     assert body["code"]
     assert body["short_url"].endswith(f"/{body['code']}")
     assert body["original_url"] == TEST_URL
+    assert body["message"] == MSG_LINK_CREATED
+
+
+def test_shorten_same_url_twice(client: TestClient) -> None:
+    first = client.post("/api/shorten", json={"url": "https://example.com"})
+    second = client.post("/api/shorten", json={"url": "https://example.com"})
+
+    assert first.status_code == status.HTTP_201_CREATED
+    assert first.json()["message"] == MSG_LINK_CREATED
+
+    assert second.status_code == status.HTTP_200_OK
+    assert second.json()["code"] == first.json()["code"]
+    assert second.json()["message"] == MSG_LINK_EXISTS
+
+
+def test_shorten_same_url_different_casing(client: TestClient) -> None:
+    seed_link()
+
+    response = client.post(
+        "/api/shorten",
+        json={"url": "HTTPS://EXAMPLE.COM"},
+    )
+
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json()["code"] == "abc123"
+    assert response.json()["message"] == MSG_LINK_EXISTS
+
+
+def test_shorten_trailing_slash_variant(client: TestClient) -> None:
+    first = client.post("/api/shorten", json={"url": "https://example.com"})
+    second = client.post("/api/shorten", json={"url": "https://example.com/"})
+
+    assert first.status_code == status.HTTP_201_CREATED
+    assert second.status_code == status.HTTP_200_OK
+    assert second.json()["code"] == first.json()["code"]
+    assert second.json()["message"] == MSG_LINK_EXISTS
 
 
 def test_shorten_duplicate_custom_code_returns_409(client: TestClient) -> None:
@@ -39,10 +81,24 @@ def test_shorten_duplicate_custom_code_returns_409(client: TestClient) -> None:
 
     response = client.post(
         "/api/shorten",
-        json={"url": TEST_URL, "custom_code": "abc123"},
+        json={"url": "https://other.com", "custom_code": "abc123"},
     )
 
     assert response.status_code == status.HTTP_409_CONFLICT
+    assert response.json()["detail"] == "Code 'abc123' is already taken"
+
+
+def test_shorten_storage_error_returns_503(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def raise_storage_error(_links: dict) -> None:
+        raise StorageError("Unable to access link storage")
+
+    monkeypatch.setattr("app.repositories.link_repo.save_links", raise_storage_error)
+
+    response = client.post("/api/shorten", json={"url": TEST_URL})
+
+    assert response.status_code == status.HTTP_503_SERVICE_UNAVAILABLE
 
 
 def test_get_link_by_code(client: TestClient) -> None:

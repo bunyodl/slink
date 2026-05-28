@@ -1,5 +1,6 @@
 from app.data_store import load_links, save_links
 from app.schemas.link import StoredLink
+from app.services.url_normalize import url_hash as compute_url_hash
 
 
 class LinkRepository:
@@ -8,6 +9,14 @@ class LinkRepository:
         if raw is None:
             return None
         return StoredLink.model_validate(raw)
+
+    def find_by_url_hash(self, target_hash: str) -> StoredLink | None:
+        for raw in load_links().values():
+            link = StoredLink.model_validate(raw)
+            effective_hash = raw.get("url_hash") or compute_url_hash(link.url)
+            if effective_hash == target_hash:
+                return link
+        return None
 
     def create_link(self, link: StoredLink) -> None:
         links = load_links()

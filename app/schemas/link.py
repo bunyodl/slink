@@ -17,6 +17,7 @@ class ShortenResponse(BaseModel):
     code: str = Field(min_length=_code_length, max_length=_code_length)
     short_url: str
     original_url: str
+    message: str
 
 class LinkApiModel(BaseModel):
     """Public link shape returned from API routes."""
@@ -29,4 +30,5 @@ class StoredLink(BaseModel):
 
     code: str = Field(min_length=_code_length, max_length=_code_length)
     url: HttpUrl
+    url_hash: str | None = None
     created_at: datetime
