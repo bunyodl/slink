@@ -4,18 +4,21 @@ Local URL shortener built with FastAPI. Links are stored in `data/links.json` (g
 
 ## Setup
 
+From the repo root (Git Bash on Windows):
+
 ```bash
-python -m venv .venv
-source .venv/Scripts/activate   # Windows Git Bash
-pip install -r requirements.txt
-cp .env.example .env
+./scripts/setup.sh
 ```
+
+Creates `.venv`, installs dependencies from `requirements.txt`, and copies `.env.example` to `.env` if `.env` does not exist yet.
 
 ## Run
 
 ```bash
-uvicorn app.main:app --reload
+./scripts/dev.sh
 ```
+
+Starts the API with reload at http://127.0.0.1:8000 (see `BASE_URL` in `.env`).
 
 - API docs: http://127.0.0.1:8000/docs
 - Health: http://127.0.0.1:8000/health
