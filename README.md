@@ -1,6 +1,12 @@
 # Slink
 
-Local URL shortener built with FastAPI. Links are stored in `data/links.json` (git-ignored).
+Slink is a lightweight URL shortener API built with FastAPI. Create short links with optional custom codes, deduplicate by canonical URL, list and resolve links, and redirect via permanent 308 responses. Persists to local JSON for simple self-hosted use.
+
+Links are stored in `data/links.json` (git-ignored).
+
+## Frontend
+
+A web UI is not implemented yet. Use the REST API (see [Endpoints](#endpoints)) or Swagger at `/docs` when the server is running.
 
 ## Setup
 
