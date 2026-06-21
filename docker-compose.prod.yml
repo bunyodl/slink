@@ -10,4 +10,13 @@ services:
     env_file:
       - .env
     volumes:
-      - ./data:/app/data
+      - db_data:/app/data
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  db_data:

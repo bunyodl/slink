@@ -12,7 +12,8 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 
 # copy source code
-COPY . .
+COPY app/ ./app
+COPY data/ ./data
 
 # change ownership
 RUN chown -R bunyod:slink_group /app
