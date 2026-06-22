@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+import os
 
 router = APIRouter(tags=["health"])
 
@@ -7,4 +8,7 @@ router = APIRouter(tags=["health"])
 
 @router.get("/health")
 async def health_check() -> dict[str, str]:
-    return {"status": "ok"}
+    return {
+        "status": "ok",
+        "backend_id": os.environ.get("BACKEND_ID", "not set"),
+    }
