@@ -10,5 +10,5 @@ router = APIRouter(tags=["health"])
 async def health_check() -> dict[str, str]:
     return {
         "status": "ok",
-        "backend_id": os.environ.get("BACKEND_ID", "not set"),
+        "backend_id": os.environ.get("HOSTNAME", "not set"),
     }
